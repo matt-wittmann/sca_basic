@@ -14,16 +14,21 @@ trait BasicParser extends RegexParsers {
   def boolean: Parser[BooleanLiteral] = booleanTrue | booleanFalse
   def string: Parser[StringLiteral] = "\"" ~ """[\w\d ,!\t\-@$\*\(\)\^%\+']*""".r ~ "\"" ^^ { case "\"" ~ string ~ "\"" => StringLiteral(string) }
   def literal: Parser[Literal] = number | boolean | string
-  def value: Parser[Expression] = literal | identifier
+  def value: Parser[Expression] = literal | identifier | grouping
 
   def assignment: Parser[VariableDeclaration] = "LET" ~ identifier ~ "=" ~ expression ^^ {
     case "LET" ~ identifier ~ "=" ~ expression => VariableDeclaration(identifier, expression)
   }
 
+  def goto: Parser[GoTo] = "GOTO" ~ label ^^ { case "GOTO" ~ label => GoTo(label) }
+  def ifThen: Parser[If] = "IF" ~ expression ~ "THEN" ~ command ^^ { case "IF" ~ condition ~ "THEN" ~ command => If(condition, command) }
+
   def not: Parser[Not] = "NOT" ~ expression ^^ { case "NOT" ~ operand => Not(operand) }
 
   def binaryOperator: Parser[String] = "+" | "-" | "*" | "/" | "&" | "AND" | "OR" | "=" | "<>"
   def unaryOperator: Parser[String] = "NOT"
+
+  def grouping: Parser[Expression] = log("(" ~> expression <~ ")")("grouped") ^^ { Grouping(_) }
 
   def prefixedExpression: Parser[Expression] = rep(unaryOperator) ~ value ^^ {
     case list ~ operand => (operand /: list) {
@@ -33,21 +38,21 @@ trait BasicParser extends RegexParsers {
   }
 
   def expression: Parser[Expression] = prefixedExpression ~ rep(binaryOperator ~ expression) ^^ {
-  case lhs ~ list => ((lhs: Expression) /: list) {
-    case (lhs, "+" ~ rhs) => Plus(lhs, rhs)
-    case (lhs, "-" ~ rhs) => Minus(lhs, rhs)
-    case (lhs, "*" ~ rhs) => Times(lhs, rhs)
-    case (lhs, "/" ~ rhs) => DividedBy(lhs, rhs)
-    case (lhs, "&" ~ rhs) => Concatenate(lhs, rhs)
-    case (lhs, "AND" ~ rhs) => And(lhs, rhs)
-    case (lhs, "OR" ~ rhs) => Or(lhs, rhs)
-    case (lhs, "=" ~ rhs) => Equals(lhs, rhs)
-    case (lhs, "<>" ~ rhs) => NotEqual(lhs, rhs)
-    case (lhs,  _) => lhs
+    case lhs ~ list => ((lhs: Expression) /: list) {
+      case (lhs, "+" ~ rhs) => Plus(lhs, rhs)
+      case (lhs, "-" ~ rhs) => Minus(lhs, rhs)
+      case (lhs, "*" ~ rhs) => Times(lhs, rhs)
+      case (lhs, "/" ~ rhs) => DividedBy(lhs, rhs)
+      case (lhs, "&" ~ rhs) => Concatenate(lhs, rhs)
+      case (lhs, "AND" ~ rhs) => And(lhs, rhs)
+      case (lhs, "OR" ~ rhs) => Or(lhs, rhs)
+      case (lhs, "=" ~ rhs) => Equals(lhs, rhs)
+      case (lhs, "<>" ~ rhs) => NotEqual(lhs, rhs)
+      case (lhs,  _) => lhs
+    }
   }
-}
 
-  def command: Parser[Command] = comment | assignment | print
+  def command: Parser[Command] = comment | assignment | print | goto | ifThen
 
   def statement: Parser[Map[Label, Node]] = label ~ command ^^ {
     case label ~ rest => Map(label -> rest)

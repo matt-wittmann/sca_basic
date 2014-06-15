@@ -1,14 +1,18 @@
 package com.mattwittmann.scabasic
 
-sealed abstract class Node(token: String)
+sealed abstract class Node(token: String) {
+  override def toString = token
+}
 
 /** A line number. */
 case class Label(token: String) extends Node(token)
 /** A built-in BASIC command such as PRINT or REM. */
 sealed abstract class Command(token: String) extends Node(token)
-case class VariableDeclaration(identifier: Identifier, expression: Expression) extends Command(s"LET ${identifier.token} = $expression")
+case class VariableDeclaration(identifier: Identifier, expression: Expression) extends Command(s"LET $identifier = $expression")
 /** A comment in the source code. BASIC called these remarks. */
 case class Comment(token: String) extends Command(token)
+case class GoTo(label: Label) extends Command(s"GOTO $label")
+case class If(condition: Expression, command: Command) extends Command(s"IF $condition THEN $command")
 sealed abstract class Expression(token: String) extends Node(token)
 sealed abstract class Value(token: String) extends Expression(token)
 /** A variable name. */
@@ -49,9 +53,5 @@ case class And(lhs: Expression, rhs: Expression) extends BinaryOperator("AND", l
 case class Or(lhs: Expression, rhs: Expression) extends BinaryOperator("OR", lhs, rhs)
 /** Logical not operator. */
 case class Not(expression: Expression) extends UnnaryOperator("NOT", expression)
-sealed abstract class GroupDelimiter(token: String) extends Node(token)
-/** Opening delimiter for a grouped expression. */
-case class OpenGrouping() extends GroupDelimiter("(")
-/** Closing delimiter for a grouped expression. */
-case class CloseGrouping() extends GroupDelimiter(")")
+case class Grouping(expression: Expression) extends Expression(s"(${expression.toString})")
 case class Print(expression: Expression) extends Command("PRINT " + expression.toString)

@@ -45,6 +45,31 @@ class BasicParserSpec extends WordSpec with Assertions {
       "print not not true" in {
         assert(parser("10 PRINT NOT NOT TRUE") === Map(Label("10") -> Print(Not(Not(BooleanTrue)))))
       }
+      "print (2 + 2)" in {
+        assert(parser("10 PRINT (2 + 2)") === Map(Label("10") -> Print(Grouping(Plus(NumericLiteral("2"), NumericLiteral("2"))))))
+      }
+      "print 2 + (2 + 2)" in {
+        assert(parser("10 PRINT 2 + (2 + 2)") === Map(Label("10") -> Print(Plus(NumericLiteral("2"), Grouping(Plus(NumericLiteral("2"), NumericLiteral("2")))))))
+      }
+      "print (2 + 2) + 2" in {
+        assert(parser("10 PRINT (2 + 2) + 2") === Map(Label("10") -> Print(Plus(Grouping(Plus(NumericLiteral("2"), NumericLiteral("2"))), NumericLiteral("2")))))
+      }
+    }
+    "A GoTo command" should {
+      "go to Line 10" in {
+        assert(parser("20 GOTO 10") === Map(Label("20") -> GoTo(Label("10"))))
+      }
+    }
+    "An if clause" should {
+      "print 2 if true" in {
+        assert(parser("10 IF TRUE THEN PRINT 2") === Map(Label("10") -> If(BooleanTrue, Print(NumericLiteral("2")))))
+      }
+      "print 2 if 5 = 5" in {
+        assert(parser("10 IF 5 = 5 THEN PRINT 2") === Map(Label("10") -> If(Equals(NumericLiteral("5"), NumericLiteral("5")), Print(NumericLiteral("2")))))
+      }
+      "print 2 + 2 if 5 = 5" in {
+        assert(parser("10 IF 5 = 5 THEN PRINT 2 + 2") === Map(Label("10") -> If(Equals(NumericLiteral("5"), NumericLiteral("5")), Print(Plus(NumericLiteral("2"), NumericLiteral("2"))))))
+      }
     }
   }
 }
