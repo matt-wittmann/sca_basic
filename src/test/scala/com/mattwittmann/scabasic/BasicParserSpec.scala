@@ -54,6 +54,9 @@ class BasicParserSpec extends WordSpec with Assertions {
       "print (2 + 2) + 2" in {
         assert(parser("10 PRINT (2 + 2) + 2") === Map(Label("10") -> Print(Plus(Grouping(Plus(NumericLiteral("2"), NumericLiteral("2"))), NumericLiteral("2")))))
       }
+      "print (2 + (2 + 2))" in {
+        assert(parser("10 PRINT (2 + (2 + 2))") === Map(Label("10") -> Print(Grouping(Plus(NumericLiteral("2"), Grouping(Plus(NumericLiteral("2"), NumericLiteral("2"))))))))
+      }
     }
     "A GoTo command" should {
       "go to Line 10" in {
