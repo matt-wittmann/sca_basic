@@ -20,7 +20,7 @@ case class Identifier(token: String) extends Value(token)
 /** A literal value. */
 sealed abstract class Literal(token: String) extends Value(token)
 /** A literal string value in the source code. */
-case class StringLiteral(token: String) extends Literal(token)
+case class StringLiteral(token: String) extends Literal("\"" + token + "\"")
 /** A literal numeric (integral or floating-point) literal value in the source code. */
 case class NumericLiteral(token: String) extends Literal(token)
 sealed abstract class BooleanLiteral(token: String) extends Literal(token)

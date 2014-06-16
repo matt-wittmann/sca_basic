@@ -113,6 +113,17 @@ trait BasicParser extends RegexParsers {
   }
 
   /**
+   * Adds statements/maps together.
+   *
+   * @return A map of labels (line numbers) to BASIC ADT nodes lifted into a Scala parser object
+   */
+  def statements: Parser[Map[Label, Node]] = rep(statement) ^^ {
+    // TODO Use semicolon for multiple statements on one line?
+    // """;|\n|\r\n?|\z""".r
+    case list => list.reduce(_ ++ _)
+  }
+
+  /**
    * Useful for working with other parser combinators besides taking a whole statement at a time.
    *
    * @param function A parser function in [[BasicParser]]
@@ -130,7 +141,7 @@ trait BasicParser extends RegexParsers {
    * @param input A single line of BASIC code (right now)
    * @return A map of labels (line numbers) to BASIC statements
    */
-  def apply(input: String): Map[Label, Node] = parseAll(statement, input) match {
+  def apply(input: String): Map[Label, Node] = parseAll(statements, input) match {
     case Success(result, _) => result
     case failure: NoSuccess => sys.error(failure.msg)
   }

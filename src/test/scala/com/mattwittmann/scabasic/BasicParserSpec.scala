@@ -74,5 +74,12 @@ class BasicParserSpec extends WordSpec with Assertions {
         assert(parser("10 IF 5 = 5 THEN PRINT 2 + 2") === Map(Label("10") -> If(Equals(NumericLiteral("5"), NumericLiteral("5")), Print(Plus(NumericLiteral("2"), NumericLiteral("2"))))))
       }
     }
+    "A sequence of statements" should {
+      "10 PRINT \"Hello, world!\"; 20 GOTO 10" in {
+        assert(parser(
+          """10 PRINT "Hello, world!"
+            |20 GOTO 10""".stripMargin) === Map(Label("10") -> Print(StringLiteral("Hello, world!")), Label("20") -> GoTo(Label("10"))))
+      }
+    }
   }
 }
